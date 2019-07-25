@@ -30,7 +30,7 @@ Event OnPageReset(String a_page)
 		Int i = 0
 		If (g_messages)
 			While (i < g_messages.Length)
-				Int id = AddTextOption(g_messages[i], "")
+				AddTextOption(g_messages[i], "")
 				i += 1
 			EndWhile
 		EndIf
