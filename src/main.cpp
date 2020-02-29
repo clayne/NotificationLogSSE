@@ -1,10 +1,7 @@
-﻿#include "skse64_common/BranchTrampoline.h"
-#include "skse64_common/skse_version.h"
+﻿#include "SKSE/API.h"
 
 #include "NotificationLogger.h"
 #include "version.h"
-
-#include "SKSE/API.h"
 
 
 extern "C" {
@@ -14,6 +11,7 @@ extern "C" {
 		SKSE::Logger::SetPrintLevel(SKSE::Logger::Level::kDebugMessage);
 		SKSE::Logger::SetFlushLevel(SKSE::Logger::Level::kDebugMessage);
 		SKSE::Logger::UseLogStamp(true);
+		SKSE::Logger::TrackTrampolineStats(true);
 
 		_MESSAGE("NotificationLogSSE v%s", NOTL_VERSION_VERSTRING);
 
@@ -22,16 +20,13 @@ extern "C" {
 		a_info->version = NOTL_VERSION_MAJOR;
 
 		if (a_skse->IsEditor()) {
-			_FATALERROR("Loaded in editor, marking as incompatible!\n");
+			_FATALERROR("Loaded in editor, marking as incompatible!");
 			return false;
 		}
 
-		switch (a_skse->RuntimeVersion()) {
-		case RUNTIME_VERSION_1_5_73:
-		case RUNTIME_VERSION_1_5_80:
-			break;
-		default:
-			_FATALERROR("Unsupported runtime version %08X!\n", a_skse->RuntimeVersion());
+		auto ver = a_skse->RuntimeVersion();
+		if (ver <= SKSE::RUNTIME_1_5_39) {
+			_FATALERROR("Unsupported runtime version %s!", ver.GetString().c_str());
 			return false;
 		}
 
@@ -47,8 +42,8 @@ extern "C" {
 			return false;
 		}
 
-		if (!g_branchTrampoline.Create(1024 * 1)) {
-			_FATALERROR("Failed to create branch trampoline!\n");
+		if (!SKSE::AllocTrampoline(1 << 4)) {
+			_FATALERROR("Failed to create branch trampoline!");
 			return false;
 		}
 

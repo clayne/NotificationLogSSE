@@ -4,6 +4,7 @@
 #include <string>
 
 #include "RE/Skyrim.h"
+#include "REL/Relocation.h"
 
 
 class NotificationLogger
@@ -18,7 +19,7 @@ public:
 	static Array_t GetCachedMessages(RE::StaticFunctionTag*);
 
 private:
-	using CreateHUDDataMessage_t = function_type_t<decltype(&NotificationLogger::CreateHUDDataMessage)>;
+	using CreateHUDDataMessage_t = decltype(&NotificationLogger::CreateHUDDataMessage);
 
 
 	static void InstallHooks();
@@ -27,5 +28,5 @@ private:
 
 	static constexpr std::size_t MAX_BUFFER_SIZE = 128;
 	static std::list<std::string> _notificationBuffer;
-	static inline CreateHUDDataMessage_t* _createHUDDataMessage = 0;
+	static inline REL::Function<CreateHUDDataMessage_t> _createHUDDataMessage;
 };
