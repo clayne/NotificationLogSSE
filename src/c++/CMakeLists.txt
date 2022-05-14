@@ -1,5 +1,4 @@
-set(ROOT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../..")
-cmake_path(NORMAL_PATH ROOT_DIR)
+set_root_directory()
 
 set(SOURCE_DIR "${ROOT_DIR}/src/c++")
 set(SOURCE_FILES
@@ -8,12 +7,6 @@ set(SOURCE_FILES
 	"${SOURCE_DIR}/PCH.h"
 )
 
-set(TRANSLATIONS_DIR "${ROOT_DIR}/data/Data/Interface/Translations")
-set(TRANSLATIONS_FILES
-	"${TRANSLATIONS_DIR}/NotificationLog_english.txt"
-)
-
-source_group("Data/Interface/Translations" FILES ${TRANSLATIONS_FILES})
 source_group("src" FILES ${SOURCE_FILES})
 
 set(VERSION_HEADER "${CMAKE_CURRENT_BINARY_DIR}/src/Plugin.h")
@@ -35,7 +28,6 @@ add_library(
 	"${PROJECT_NAME}"
 	SHARED
 	${SOURCE_FILES}
-	${TRANSLATIONS_FILES}
 	"${VERSION_HEADER}"
 	"${CMAKE_CURRENT_BINARY_DIR}/version.rc"
 	"${ROOT_DIR}/.clang-format"
@@ -98,13 +90,6 @@ target_precompile_headers(
 
 install(
 	FILES
-		${TRANSLATIONS_FILES}
-	DESTINATION "Interface/Translations"
-	COMPONENT "main"
-)
-
-install(
-	FILES
 		"$<TARGET_FILE:${PROJECT_NAME}>"
 	DESTINATION "SKSE/Plugins"
 	COMPONENT "main"
@@ -126,3 +111,76 @@ if("${COPY_OUTPUT}")
 		VERBATIM
 	)
 endif()
+
+macro(handle_data)
+	set(_PREFIX handle_data)
+
+	set(_OPTIONS)
+	set(_ONE_VALUE_ARGS
+		DESTINATION
+	)
+	set(_MULTI_VALUE_ARGS
+		FILES
+	)
+
+	set(_REQUIRED
+		FILES
+	)
+
+	cmake_parse_arguments(
+		"${_PREFIX}"
+		"${_OPTIONS}"
+		"${_ONE_VALUE_ARGS}"
+		"${_MULTI_VALUE_ARGS}"
+		"${ARGN}"
+	)
+
+	foreach(_ARG ${_REQUIRED})
+		if(NOT DEFINED "${_PREFIX}_${_ARG}")
+			message(FATAL_ERROR "Argument is required to be defined: ${_ARG}")
+		endif()
+	endforeach()
+
+	if(DEFINED ${_PREFIX}_DESTINATION)
+		set(${_PREFIX}_INSTALL_DESTINATION "${${_PREFIX}_DESTINATION}")
+		set(${_PREFIX}_COPY_DESTINATION "${${_PREFIX}_DESTINATION}")
+	else()
+		set(${_PREFIX}_INSTALL_DESTINATION "/")
+		set(${_PREFIX}_COPY_DESTINATION "")
+	endif()
+
+	install(
+		FILES ${${_PREFIX}_FILES}
+		DESTINATION "${${_PREFIX}_INSTALL_DESTINATION}"
+		COMPONENT "main"
+	)
+
+	if("${COPY_OUTPUT}")
+		foreach(_FILE ${${_PREFIX}_FILES})
+			add_custom_command(
+				TARGET "${PROJECT_NAME}"
+				POST_BUILD
+				COMMAND
+					"${CMAKE_COMMAND}"
+					-E
+					copy_if_different
+					"${_FILE}"
+					"${Skyrim64Path}/Data/${${_PREFIX}_COPY_DESTINATION}"
+				VERBATIM
+			)
+		endforeach()
+	endif()
+endmacro()
+
+set(TRANSLATIONS_DIR "${ROOT_DIR}/data/Data/Interface/Translations")
+handle_data(
+	FILES
+		"${TRANSLATIONS_DIR}/NotificationLog_english.txt"
+	DESTINATION "Interface/Translations"
+)
+
+set(DATA_DIR "${ROOT_DIR}/data/Data")
+handle_data(
+	FILES
+		"${DATA_DIR}/NotificationLog.esp"
+)

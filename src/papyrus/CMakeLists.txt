@@ -7,13 +7,7 @@ find_package(
 		Interpreter
 )
 
-set(ROOT_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../..")
-cmake_path(NORMAL_PATH ROOT_DIR)
-if("${ROOT_DIR}" MATCHES "[\\/]$")
-	string(LENGTH "${ROOT_DIR}" ROOT_DIR_LENGTH)
-	math(EXPR ROOT_DIR_LENGTH "${ROOT_DIR_LENGTH} - 1")
-	string(SUBSTRING "${ROOT_DIR}" 0 "${ROOT_DIR_LENGTH}" ROOT_DIR)
-endif()
+set_root_directory()
 
 set(PAPYRUS_SOURCE_DIR "${ROOT_DIR}/src/papyrus")
 set(PAPYRUS_SOURCES
@@ -38,21 +32,24 @@ if("${COPY_OUTPUT}")
 	list(APPEND COMMAND_ARGS "--copy-build")
 endif()
 
+foreach(ELEMENT ${PAPYRUS_SOURCES})
+	cmake_path(GET ELEMENT STEM ELEMENT)
+	list(APPEND PAPYRUS_COMPILED "${CMAKE_CURRENT_BINARY_DIR}/artifacts/${ELEMENT}.pex")
+endforeach()
+
 add_custom_target(
 	"papyrus_compile"
 	COMMAND
 		${COMMAND_ARGS}
+	DEPENDS
+	BYPRODUCTS
+		${PAPYRUS_COMPILED}
 	WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
 	VERBATIM
 	SOURCES
 		${PAPYRUS_SOURCES}
 		"${TOOL_SOURCE}"
 )
-
-foreach(ELEMENT ${PAPYRUS_SOURCES})
-	cmake_path(GET ELEMENT STEM ELEMENT)
-	list(APPEND PAPYRUS_COMPILED "${CMAKE_CURRENT_BINARY_DIR}/artifacts/${ELEMENT}.pex")
-endforeach()
 
 install(
 	FILES
