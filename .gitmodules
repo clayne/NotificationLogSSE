@@ -1,0 +1,6 @@
+[submodule "external/CommonLibSSE"]
+	path = external/CommonLibSSE
+	url = https://github.com/Ryan-rsm-McKenzie/CommonLibSSE
+[submodule "external/skyui"]
+	path = external/skyui
+	url = https://github.com/schlangster/skyui
